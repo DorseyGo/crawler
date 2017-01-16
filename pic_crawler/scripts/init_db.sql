@@ -33,6 +33,7 @@ DROP TABLE IF EXISTS `CATEGORIES`;
 CREATE TABLE `CATEGORIES` (
 	`ID` INT NOT NULL AUTO_INCREMENT,
 	`CATEGORY` VARCHAR(8) NOT NULL COMMENT 'categories, O for OUTER; T for top, B for bottom, D for dress, E for bag, S for shoes, A for acc; others, not recognized',
+	`ABBREVIATION` CHAR NOT NULL COMMENT 'abbreviation for the category',
 	PRIMARY KEY (`ID`)
 )ENGINE=InnoDB DEFAULT CHARSET=UTF8;
 
@@ -77,4 +78,4 @@ CREATE INDEX IDX_CATEGORY ON `CATEGORIES` (`CATEGORY`);
 -- ---------------------------------
 -- initialize required data 
 -- ---------------------------------
-INSERT INTO `CATEGORIES`(`CATEGORY`) VALUES('TOP'), ('BOTTOM'), ('OUTER'), ('DRESS'), ('BAG'), ('SHOES'), ('ACC');
+INSERT INTO `CATEGORIES`(`CATEGORY`, `ABBREVIATION`) VALUES('TOP', 'T'), ('BOTTOM', 'B'), ('OUTER', 'O'), ('DRESS', 'D'), ('BAG', 'E'), ('SHOES', 'S'), ('ACC', 'A');
