@@ -17,7 +17,7 @@ class LogUtils():
     #: default log file name
     default_log_file_name = "pic_crawler.log"
 
-    def get_log(self, log_name, log_file_name):
+    def get_log(self, log_name, log_file_name = None):
         logger = logging.getLogger(log_name)
         log_formatter = logging.Formatter(self.log_pattern)
 

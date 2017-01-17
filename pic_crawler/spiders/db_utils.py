@@ -8,86 +8,161 @@
 
 import MySQLdb
 from DBUtils.PooledDB import PooledDB
-import db_configs as DBConfigs
+from configs import Configs
+from log_utils import LogUtils
 
 #: used to persistent data to underlying database
 class DBManager():
 
+    #: instance for configuration read
+    configs = None
+
+    #: instance for the PooledDB
+    __pool = None
+
+    #: log file for recording SQL statement execution
+    db_log = "db.log"
+
+    name = "dbmanager"
+
+    logutils = LogUtils()
 
     def __init__(self):
-        conn_args = {'host' : DBConfigs['DB_HOST'], 'user' : DBConfigs['DB_USER'], 'passwd' : DBConfigs['DB_PASSWD'],
-                     'db': DBConfigs['DB_NAME'], 'charset': DBConfigs['DB_CHARSET']}
-        self._pool = PooledDB(MySQLdb, mincached=DBConfigs['DB_MIN_CACHED'], maxcached=DBConfigs['DB_MAX_CACHED'], maxshared=DBConfigs['DB_MAX_SHARED'], maxusage=DBConfigs['DB_MAX_USAGE'], **conn_args)
+        if self.__pool is None:
+            configs = Configs()
+            connArgs = {
+                'host' : configs.dbconf('db_host'),
+                'user' : configs.dbconf('db_user'),
+                'passwd': configs.dbconf('db_password'),
+                'port': int(configs.dbconf('db_port')),
+                'db': configs.dbconf('db_name'),
+                'charset': configs.dbconf('db_charset')
+            }
 
+            mincached = int(configs.dbconf('db_min_cached'))
+            maxcached = int(configs.dbconf('db_max_cached'))
+            maxshared = int(configs.dbconf('db_max_shared'))
+            maxusage = int(configs.dbconf('db_max_usage'))
+
+            self.__pool = PooledDB(MySQLdb, mincached=mincached, maxcached=maxcached, maxshared=maxshared, maxusage=maxusage, **connArgs)
 
     def getconn(self):
-        return self._pool.connection()
+        return self.__pool.connection()
 
+    def getlog(self):
+        return self.logutils.get_log(self.name)
 
-__dbManager = DBManager()
+    #: release the connection
+    def _release__(self, conn, cursor):
+        if cursor is not None:
+            cursor.close()
 
+        if conn is not None:
+            conn.close()
 
-def getconnection():
-    return __dbManager.getconn()
+    def insertandgetid(self, sql, params=None):
+        conn = self.getconn()
+        cursor = conn.cursor()
 
-def execute_and_getId(sql, param=None):
-    conn = getconnection()
-    cursor = conn.cursor()
-    if param == None:
-        cursor.execute(sql)
-    else:
-        cursor.execute(sql, param)
+        try:
+            if params is None:
+                cursor.execute(sql)
+            else:
+                cursor.execute(sql, params)
 
-    id = cursor.lastrowid
-    __release__(cursor, conn)
+            rowid = cursor.lastrowid();
+            conn.commit()
+            return rowid
+        except:
+            self.getlog().error("ERROR - Failed to execute sql [%], with parameters [%]", sql, params)
+            conn.rollback()
+            #: return None to indicate that its failed
+            return None
+        finally:
+            self._release__(conn, cursor)
 
+    def queryone(self, sql, params=None):
+        conn = self.getconn()
+        cursor = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
 
-    return id
+        try:
+            rowcount = 0
+            if params is None:
+                rowcount = cursor.execute(sql)
+            else:
+                rowcount = cursor.execute(sql, params)
 
-def queryone(sql):
-    conn = getconnection()
-    cursor = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
-    rowcount = cursor.execute(sql)
+            if rowcount > 0:
+                result = cursor.fetchone()
+            else:
+                result = cursor.fetchall()[0]
 
-    if rowcount > 0:
-        result = cursor.fetchone()
-    else:
-        result = None
+            return result
+        except:
+            self.getlog().error("ERROR - Failed to retrieve one record by executing sql [%s], with parameters [%s]", sql, params)
+            return None
+        finally:
+            self._release__(conn, cursor)
 
-    __release__(cursor, conn)
+    def queryall(self, sql, params=None):
+        conn = self.getconn()
+        cursor = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
 
-    return result
+        try:
+            if params is None:
+                cursor.execute(sql)
+            else:
+                cursor.execute(sql, params)
 
-def queryall(sql):
-    conn = getconnection()
-    cursor = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
-    rowcount = cursor.execute(sql)
+            return cursor.fetchall()
+        except:
+            self.getlog().error("ERROR - Failed to query multiple records by executing sql [%s], with parameters [%s]", sql, params)
+            return None
+        finally:
+            self._release__(conn, cursor)
 
-    if rowcount > 0:
-        result = cursor.fetchall()
-    else:
-        result = None
+    def update(self, sql, params=None):
+        conn = self.getconn()
+        cursor = conn.cursor()
 
-    __release__(cursor, conn)
+        try:
+            if params is None:
+                rowaffected = cursor.execute(sql)
+            else:
+                rowaffected = cursor.execute(sql, params)
 
-    return result
+            conn.commit()
+            if rowaffected > 0:
+                return True
+            else:
+                return False
+        except:
+            self.getlog().error("ERROR - Failed to update by executing sql [%s], with parameters [%s]", sql, params)
+            conn.rollback()
+            return False
+        finally:
+            self._release__(conn, cursor)
 
-def insert_and_getid(sql, param=None):
-    conn = getconnection()
-    cursor = conn.cursor()
+    def delete(self, sql, params=None):
+        conn = self.getconn()
+        cursor = conn.cursor()
 
-    if param == None:
-        cursor.execute(sql)
-    else:
-        cursor.execute(sql, param)
+        try:
+            if params is None:
+                rowaffected = cursor.execute(sql)
+            else:
+                rowaffected = cursor.execute(sql, params)
 
-    id = cursor.lastrowid
-    conn.commit()
-    __release__(cursor, conn)
+            conn.commit()
+            return (True if rowaffected > 0 else False)
+        except:
+            self.getlog().error("ERROR - Failed to delete by executing sql [%s], with parameters [%s]", sql, params)
+            conn.rollback()
+            return False
+        finally:
+            self._release__(conn, cursor)
 
-    return id
-
-def __release__(cursor, conn):
-    cursor.close()
-    conn.close()
-
+if __name__ == '__main__':
+    dbutils = DBManager()
+    result = dbutils.queryone("select * from categories")
+    print str(result)
