@@ -22,7 +22,6 @@ class PicCrawler(scrapy.Spider):
     log_utils = LogUtils()
 
     def join_url_if_needed(self, response, image_url):
-        img_url = ""
         if image_url.startswith(self.HTTP_PRO):
             img_url = image_url
         else:
