@@ -7,31 +7,44 @@
 import os
 import urllib
 from log_utils import LogUtils
+from configs import Configs
+from db_utils import DBManager
 
 class PicDownloader():
-    path_to_save_img = "/Users/DORSEy/Downloads/downloads"
-    #: the categories of the product
-    categories = {"O": "outer", "T": "top", "D": "dress", "S": "shoes"}
+
+
     #: the name of for the logging
     name = "pic_downloader"
+    pic_categories = {}
 
     #: for log
     log_utils = LogUtils()
+    cnf = Configs()
+    db_mgr = DBManager()
+
+    #: SQL statement
+    __select_all_categories_stmt = "SELECT ABBREVIATION, CATEGORY FROM CATEGORIES"
+
+    def __init__(self):
+        self.path_to_save_img = self.cnf.sysconf("sys_pic_save_path")
+        categories = self.db_mgr.queryall(self.__select_all_categories_stmt)
+        for category in categories:
+            self.pic_categories[category['ABBREVIATION']] = category['CATEGORY']
+
+        print str(self.pic_categories)
 
     def determine_category(self, category):
-        method_name = "determine_category()"
         logger = self.log_utils.get_log(self.name, "")
 
         first_catgry = category[0:1]
-        existed = self.categories.has_key(first_catgry)
+        existed = self.pic_categories.has_key(first_catgry)
         if existed is False:
             logger.info("WARN - No appropriate category [%s] found", category)
             return
 
-        return self.categories.get(first_catgry)
+        return self.pic_categories.get(first_catgry)
 
     def download_and_save(self, img_url, category):
-        method_name = "download_and_save()"
         logger = self.log_utils.get_log(self.name, "")
 
         last_forward_slash_idx = img_url.rfind("/")

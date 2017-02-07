@@ -16,10 +16,10 @@ USE `PIC_CRAWLED`;
 DROP TABLE IF EXISTS `PIC_DOMAINS`;
 CREATE TABLE `PIC_DOMAINS` (
 	`ID` INT NOT NULL AUTO_INCREMENT,
-	`DOMAIN` VARCHAR(36) NOT NULL COMMENT 'the domain from which the images will be crawled',
+	`DOMAIN` VARCHAR(128) NOT NULL COMMENT 'the domain from which the images will be crawled',
 	`ABBREVIATION` VARCHAR(25) NOT NULL COMMENT 'the abbreviation for the domain',
-	`RULE_4_NAVI_IMG` VARCHAR(48) NOT NULL COMMENT 'the rules for navigate to the image you want to crawl',
-	`RULE_4_NAVI_2_NEXT_PAGE` VARCHAR(48) COMMENT 'the rule for navigating to the next page for next round',
+	`RULE_4_NAVI_IMG` VARCHAR(128) NOT NULL COMMENT 'the rules for navigate to the image you want to crawl',
+	`RULE_4_NAVI_2_NEXT_PAGE` VARCHAR(128) COMMENT 'the rule for navigating to the next page for next round',
 	`CREATED_TIME` TIMESTAMP COMMENT 'the created time for this record',
 	PRIMARY KEY (`ID`),
 	UNIQUE (`DOMAIN`)
@@ -44,7 +44,7 @@ CREATE TABLE `CATEGORIES` (
 DROP TABLE IF EXISTS `PIC_CATEGORIES_2_URL`;
 CREATE TABLE `PIC_CATEGORIES_2_URL` (
 	`ID` INT NOT NULL AUTO_INCREMENT,
-	`URL_ADDR` VARCHAR(48) NOT NULL COMMENT 'URL address from which the specific kind of images will be crawled',
+	`URL_ADDR` VARCHAR(128) NOT NULL COMMENT 'URL address from which the specific kind of images will be crawled',
 	`CATEGORY_ID` INT NOT NULL COMMENT 'the category ID',
 	`DOMAIN_ID` INT NOT NULL COMMENT 'domain ID',
 	`CREATED_TIME` TIMESTAMP,

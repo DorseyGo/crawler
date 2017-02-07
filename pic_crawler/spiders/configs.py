@@ -36,7 +36,15 @@ class Configs():
     #: read configuration in db section
     def dbconf(self, key):
         if key is None:
-            raise Exception("key should be specified", key)
+            raise Exception("key [%s] should be specified", key)
 
         self.config = self.__readconf__()
         return self.config.get('db', key)
+
+    #: read configuration in the system section
+    def sysconf(self, key):
+        if key is None:
+            raise Exception("key [%s] should not be None", key)
+
+        self.config = self.__readconf__()
+        return self.config.get('system', key)
