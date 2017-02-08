@@ -16,6 +16,7 @@ class PicDownloader():
     #: the name of for the logging
     name = "pic_downloader"
     pic_categories = {}
+    category_id_abbrevs = {}
 
     #: for log
     log_utils = LogUtils()
@@ -23,13 +24,15 @@ class PicDownloader():
     db_mgr = DBManager()
 
     #: SQL statement
-    __select_all_categories_stmt = "SELECT ABBREVIATION, CATEGORY FROM CATEGORIES"
+    __select_all_categories_stmt = "SELECT ID, ABBREVIATION, CATEGORY FROM CATEGORIES"
+    __insert_into_images = "INSERT INTO IMAGES(NAME, FULL_NAME, STORE_PATH, CATEGORY_ID) VALUES(%s, %s, %s, %s)"
 
     def __init__(self):
         self.path_to_save_img = self.cnf.sysconf("sys_pic_save_path")
         categories = self.db_mgr.queryall(self.__select_all_categories_stmt)
         for category in categories:
             self.pic_categories[category['ABBREVIATION']] = category['CATEGORY']
+            self.category_id_abbrevs[category['ABBREVIATION']] = category['ID']
 
         print str(self.pic_categories)
 
@@ -49,12 +52,13 @@ class PicDownloader():
 
         last_forward_slash_idx = img_url.rfind("/")
         question_indx = img_url.rfind("?")
-        if 0 < question_indx <= last_forward_slash_idx:
-            logger.warn("WARN - Illegal url addresss [%s] detected", img_url)
-            return
 
         #: otherwise, trying to download it and save it to local file system
-        file_name = img_url[last_forward_slash_idx + 1: question_indx]
+        if question_indx < 0:
+            file_name = img_url[last_forward_slash_idx + 1: ]
+        else:
+            file_name = img_url[last_forward_slash_idx + 1: question_indx]
+
         sub_folder = self.determine_category(category)
         path_to_save = self.path_to_save_img + "/" + sub_folder
 
@@ -62,10 +66,15 @@ class PicDownloader():
         if os.path.exists(path_to_save) is False:
             os.makedirs(path_to_save)
 
-        dest_file = path_to_save + "/" + category + file_name
+        saved_file_name = category + file_name
+        dest_file = path_to_save + "/" + saved_file_name
         with open(dest_file, "wb") as img:
             conn = urllib.urlopen(img_url)
             img.write(conn.read())
             img.flush()
             img.close()
             logger.info("INFO - image [%s] is writen to file [%s]", img_url, dest_file)
+
+        #: after save it to local file system, persistent the data to underlying database
+        params = (saved_file_name, saved_file_name, path_to_save, self.category_id_abbrevs.get(category))
+        self.db_mgr.insertandgetid(self.__insert_into_images, params)
