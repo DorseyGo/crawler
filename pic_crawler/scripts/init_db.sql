@@ -6,9 +6,9 @@
 -- Description:	used to initialize the DB for image scrapy
 -- --------------------------------------------------
 
-DROP DATABASE IF EXISTS `PIC_CRAWLED`;
-CREATE DATABASE IF NOT EXISTS `PIC_CRAWLED`;
-USE `PIC_CRAWLED`;
+DROP DATABASE IF EXISTS `CRAWLED_PICS`;
+CREATE DATABASE IF NOT EXISTS `CRAWLED_PICS`;
+USE `CRAWLED_PICS`;
 
 -- ---------------------------------
 -- create table domains to crawl images
@@ -59,14 +59,31 @@ CREATE TABLE `PIC_CATEGORIES_2_URL` (
 -- ---------------------------------
 DROP TABLE IF EXISTS `IMAGES`;
 CREATE TABLE `IMAGES` (
-	`ID` INT NOT NULL AUTO_INCREMENT,
-	`NAME` VARCHAR(12) NOT NULL COMMENT 'image name without suffix',
+	`ID` INT(4) NOT NULL AUTO_INCREMENT,
+	`NAME` VARCHAR(24) NOT NULL COMMENT 'image name without suffix',
 	`FULL_NAME` VARCHAR(24) NOT NULL COMMENT 'image name with suffix',
 	`STORE_PATH` VARCHAR(48) NOT NULL COMMENT 'relative path to the storage',
 	`CATEGORY_ID` INT NOT NULL COMMENT 'the category ID',
+	`DOMAIN_ID` INT NOT NULL COMMENT 'the domain ID',
 	`CREATED_TIME` TIMESTAMP,
 	PRIMARY KEY (`ID`),
-	FOREIGN KEY (`CATEGORY_ID`) REFERENCES `CATEGORIES` (`ID`)
+	FOREIGN KEY (`CATEGORY_ID`) REFERENCES `CATEGORIES` (`ID`),
+	FOREIGN KEY (`DOMAIN_ID`) REFERENCES `PIC_DOMAINS` (`ID`)
+)ENGINE=InnoDB DEFAULT CHARSET=UTF8;
+
+-- ---------------------------------
+-- create table for storing all crawled image details
+-- ---------------------------------
+DROP TABLE IF EXISTS `IMAGE_DETAILS`;
+CREATE TABLE `IMAGE_DETAILS` (
+	`ID` INT(4) NOT NULL AUTO_INCREMENT,
+	`NAME` VARCHAR(24) NOT NULL COMMENT 'image name without suffix',
+	`FULL_NAME` VARCHAR(24) NOT NULL COMMENT 'image name with suffix',
+	`STORE_PATH` VARCHAR(48) NOT NULL COMMENT 'relative path to the storage',
+	`IMG_ID` INT(4) NOT NULL COMMENT 'parent image ID',
+	`CREATED_TIME` TIMESTAMP,
+	PRIMARY KEY (`ID`),
+	FOREIGN KEY (`IMG_ID`) REFERENCES `IMAGES` (`ID`)
 )ENGINE=InnoDB DEFAULT CHARSET=UTF8;
 
 -- ---------------------------------
@@ -74,6 +91,8 @@ CREATE TABLE `IMAGES` (
 -- ---------------------------------
 CREATE INDEX IDX_PIC_DOMAIN_ABBRVT ON `PIC_DOMAINS` (`ABBREVIATION`);
 CREATE INDEX IDX_CATEGORY ON `CATEGORIES` (`CATEGORY`);
+CREATE INDEX IDX_IMG_NAME ON `IMAGES` (`NAME`);
+CREATE INDEX IDX_IMG_DETAIL_NAME ON `IMAGE_DETAILS` (`NAME`);
 
 -- ---------------------------------
 -- initialize required data 
