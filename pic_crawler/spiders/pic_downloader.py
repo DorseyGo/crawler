@@ -8,8 +8,13 @@ import os
 import urllib
 from log_utils import LogUtils
 from configs import Configs
-from db_utils import DBManager
+from images_persistent_service import ImagesPersistentService
+from pic_domains_persistent_service import PicDomainsPersistentService
+from categories_persistent_service import CategoriesPersistentService
+from img_details_persistent_service import ImgDetailsPersistentService
 
+#: used to download the picture from the url address given, and
+#: store this kind of information into the underlying database.
 class PicDownloader():
 
 
@@ -21,20 +26,18 @@ class PicDownloader():
     #: for log
     log_utils = LogUtils()
     cnf = Configs()
-    db_mgr = DBManager()
 
-    #: SQL statement
-    __select_all_categories_stmt = "SELECT ID, ABBREVIATION, CATEGORY FROM CATEGORIES"
-    __insert_into_images = "INSERT INTO IMAGES(NAME, FULL_NAME, STORE_PATH, CATEGORY_ID) VALUES(%s, %s, %s, %s)"
 
     def __init__(self):
+        self.image_persistent_service = ImagesPersistentService()
+        self.image_detail_persistent_service = ImgDetailsPersistentService()
+        self.domain_persistent_service = PicDomainsPersistentService()
+        self.categories_persistent_service = CategoriesPersistentService()
         self.path_to_save_img = self.cnf.sysconf("sys_pic_save_path")
-        categories = self.db_mgr.queryall(self.__select_all_categories_stmt)
+        categories = self.categories_persistent_service.find_all_categories()
         for category in categories:
             self.pic_categories[category['ABBREVIATION']] = category['CATEGORY']
             self.category_id_abbrevs[category['ABBREVIATION']] = category['ID']
-
-        print str(self.pic_categories)
 
     def determine_category(self, category):
         logger = self.log_utils.get_log(self.name, "")
@@ -47,34 +50,82 @@ class PicDownloader():
 
         return self.pic_categories.get(first_catgry)
 
-    def download_and_save(self, img_url, category):
-        logger = self.log_utils.get_log(self.name, "")
+    #: check if the image exists
+    def is_img_exist(self, img_name = None, domain_id = None, category_id = None):
+        return self.image_persistent_service.is_img_exists(img_name, domain_id, category_id)
+
+    #: create the directory if absent, and return the path.
+    def create_dir_if_absent(self, domain_id = None, category = None):
+        domain = self.domain_persistent_service.find_domain_by_id(domain_id)
+        if domain is None:
+            raise RuntimeError("No domain found according to ID [%]", domain_id)
+
+        domain_abbr = domain['ABBREVIATION']
+        category_sub_folder = self.determine_category(category)
+        the_path_to_store_img = self.path_to_save_img + "/" + domain_abbr + "/" + category_sub_folder
+        if os.path.exists(the_path_to_store_img) is False:
+            os.makedirs(the_path_to_store_img)
+
+        return the_path_to_store_img
+
+    #: the full file name, without path info
+    def determine_file_name(self, img_url = None, category = None):
+        if img_url is None:
+            raise RuntimeError("Image url address MUST be specified")
 
         last_forward_slash_idx = img_url.rfind("/")
-        question_indx = img_url.rfind("?")
+        question_idx = img_url.rfind("?")
 
-        #: otherwise, trying to download it and save it to local file system
-        if question_indx < 0:
-            file_name = img_url[last_forward_slash_idx + 1: ]
+        if question_idx < 0:
+            full_file_name = img_url[last_forward_slash_idx + 1: ]
         else:
-            file_name = img_url[last_forward_slash_idx + 1: question_indx]
+            full_file_name = img_url[last_forward_slash_idx + 1: question_idx]
 
-        sub_folder = self.determine_category(category)
-        path_to_save = self.path_to_save_img + "/" + sub_folder
+        return category + full_file_name
 
-        #: check if the destination folder exists
-        if os.path.exists(path_to_save) is False:
-            os.makedirs(path_to_save)
+    #: get the file name without suffix, which identifies the file type
+    def get_file_name_without_suffix(self, full_file_name = None):
+        if full_file_name is None:
+            return None
 
-        saved_file_name = category + file_name
-        dest_file = path_to_save + "/" + saved_file_name
-        with open(dest_file, "wb") as img:
-            conn = urllib.urlopen(img_url)
-            img.write(conn.read())
-            img.flush()
-            img.close()
-            logger.info("INFO - image [%s] is writen to file [%s]", img_url, dest_file)
+        dot_idx = full_file_name.rfind(".")
+        if dot_idx >= 0:
+            file_name_without_suffix = full_file_name[0: dot_idx]
+        else:
+            file_name_without_suffix = full_file_name
+
+        return file_name_without_suffix
+
+    def download_and_save(self, img_url, category, domain_id = None, parent_img_id = None):
+        logger = self.log_utils.get_log(self.name, "")
+        logger.debug("DEBUG - download and save img_url = %s, category = %s, domain_id = %s, parent_img_id = %s", img_url, category, domain_id, parent_img_id)
+
+        full_file_name = self.determine_file_name(img_url, category)
+        file_name_without_suffix = self.get_file_name_without_suffix(full_file_name)
+        category_id = self.category_id_abbrevs.get(category)
+
+        #: check if file already exists in local
+        #: if exists, then do not download anymore
+        if parent_img_id is None:
+            if self.is_img_exist(file_name_without_suffix, domain_id, category_id) is True:
+                logger.debug("DEBUG - Found that file [%s] already exists to url address [%s]", file_name_without_suffix, img_url)
+                return None
+
+        path_to_store_img = self.create_dir_if_absent(domain_id, category)
+        dest_file = path_to_store_img + "/" + full_file_name
+        urlopener = urllib.URLopener()
+        # download the image stream
+        fp = urlopener.open(img_url)
+        data = fp.read()
+        # write it as byte
+        dest = open(dest_file, "w+b")
+        dest.write(data)
+        dest.close()
 
         #: after save it to local file system, persistent the data to underlying database
-        params = (saved_file_name, saved_file_name, path_to_save, self.category_id_abbrevs.get(category))
-        self.db_mgr.insertandgetid(self.__insert_into_images, params)
+        if parent_img_id is None:
+            last_img_id = self.image_persistent_service.insert_and_get_id(file_name_without_suffix, full_file_name, path_to_store_img, category_id, domain_id)
+            logger.debug("----------------------->>Returned last image id = %s", last_img_id)
+            return last_img_id
+
+        return self.image_detail_persistent_service.insert_and_get_id(file_name_without_suffix, full_file_name, path_to_store_img, parent_img_id)

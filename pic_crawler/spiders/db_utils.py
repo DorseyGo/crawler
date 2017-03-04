@@ -71,9 +71,9 @@ class DBManager():
             else:
                 cursor.execute(sql, params)
 
-            #rowid = cursor.lastrowid();
             conn.commit()
-            #return rowid
+            rowid = cursor.lastrowid;
+            return rowid
         except Exception, e:
             self.getlog().error("ERROR - Failed to execute sql [%s], with parameters [%s]", sql, params)
             print "error", Exception, e
@@ -93,6 +93,9 @@ class DBManager():
                 rowcount = cursor.execute(sql)
             else:
                 rowcount = cursor.execute(sql, params)
+
+            if rowcount == 0:
+                return None
 
             if 1 >= rowcount > 0:
                 result = cursor.fetchone()
@@ -166,19 +169,9 @@ class DBManager():
 
 if __name__ == '__main__':
     dbutils = DBManager()
-    result = dbutils.queryone("select * from categories")
-    print result['CATEGORY']
 
-    manys = dbutils.queryall("select * from categories")
-    for item in manys:
-        print item['CATEGORY']
+    __INSERT_INTO_PIC_DOMAINS = "INSERT INTO pic_domains(DOMAIN, ABBREVIATION, RULE_4_NAVI_IMG) VALUES (%s, %s, %s)"
+    params = ('http://www.roer.co.kr', 'ROER', '//img[@class=\'MS_prod_img_s\']/@src', )
+    last_id = dbutils.insertandgetid(__INSERT_INTO_PIC_DOMAINS, params)
+    print str(last_id)
 
-    #sql = "SELECT RULE_4_NAVI_IMG FROM PIC_DOMAINS pd LEFT JOIN PIC_CATEGORIES_2_URL pc2u ON pd.ID = pc2u.DOMAIN_ID AND pc2u.URL_ADDR = %s" %
-    params = ("http://www.roer.co.kr/shop/shopbrand.html?xcode=003&type=X", )
-    rules = dbutils.queryone("select RULE_4_NAVI_IMG from pic_domains pd left JOIN pic_categories_2_url pc2u ON pd.id = pc2u.domain_id AND pc2u.url_addr = %s", params)
-    # rules = dbutils.queryone("select RULE_4_NAVI_IMG from pic_domains pd left JOIN pic_categories_2_url pc2u ON pd.id = pc2u.domain_id AND pc2u.url_addr = 'http://www.roer.co.kr/shop/shopbrand.html?xcode=003&type=X'")
-    print str(rules)
-
-    #params = ("hello", "world", "world", 1)
-    #id = dbutils.insertandgetid("insert into images(NAME, FULL_NAME, STORE_PATH, CATEGORY_ID) VALUES(%s, %s, %s, %s)", params)
-    #print id
