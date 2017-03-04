@@ -6,9 +6,9 @@
 -- Description:	used to initialize the DB for image scrapy
 -- --------------------------------------------------
 
-DROP DATABASE IF EXISTS `PIC_CRAWLED`;
-CREATE DATABASE IF NOT EXISTS `PIC_CRAWLED`;
-USE `PIC_CRAWLED`;
+DROP DATABASE IF EXISTS `CRAWLED_PICS`;
+CREATE DATABASE IF NOT EXISTS `CRAWLED_PICS`;
+USE `CRAWLED_PICS`;
 
 -- ---------------------------------
 -- create table domains to crawl images
@@ -20,6 +20,9 @@ CREATE TABLE `PIC_DOMAINS` (
 	`ABBREVIATION` VARCHAR(25) NOT NULL COMMENT 'the abbreviation for the domain',
 	`RULE_4_NAVI_IMG` VARCHAR(128) NOT NULL COMMENT 'the rules for navigate to the image you want to crawl',
 	`RULE_4_NAVI_2_NEXT_PAGE` VARCHAR(128) COMMENT 'the rule for navigating to the next page for next round',
+	`PATTERN_EXTRACT_PAGINATION` VARCHAR(48) COMMENT 'the rule for navigating to the next page for next round',
+	`RULE_4_LOCATE_DETAIL_IMG` VARCHAR(128) COMMENT 'the rule for navigating to the detail images for specific image',
+	`ENABLE` INT(1) NOT NULL DEFAULT 0 COMMENT 'indicates whether should crawl images from this website, 0 for yes, 1 for no',
 	`CREATED_TIME` TIMESTAMP COMMENT 'the created time for this record',
 	PRIMARY KEY (`ID`),
 	UNIQUE (`DOMAIN`)
@@ -59,14 +62,31 @@ CREATE TABLE `PIC_CATEGORIES_2_URL` (
 -- ---------------------------------
 DROP TABLE IF EXISTS `IMAGES`;
 CREATE TABLE `IMAGES` (
-	`ID` INT NOT NULL AUTO_INCREMENT,
-	`NAME` VARCHAR(12) NOT NULL COMMENT 'image name without suffix',
+	`ID` INT(4) NOT NULL AUTO_INCREMENT,
+	`NAME` VARCHAR(24) NOT NULL COMMENT 'image name without suffix',
 	`FULL_NAME` VARCHAR(24) NOT NULL COMMENT 'image name with suffix',
 	`STORE_PATH` VARCHAR(48) NOT NULL COMMENT 'relative path to the storage',
 	`CATEGORY_ID` INT NOT NULL COMMENT 'the category ID',
+	`DOMAIN_ID` INT NOT NULL COMMENT 'the domain ID',
 	`CREATED_TIME` TIMESTAMP,
 	PRIMARY KEY (`ID`),
-	FOREIGN KEY (`CATEGORY_ID`) REFERENCES `CATEGORIES` (`ID`)
+	FOREIGN KEY (`CATEGORY_ID`) REFERENCES `CATEGORIES` (`ID`),
+	FOREIGN KEY (`DOMAIN_ID`) REFERENCES `PIC_DOMAINS` (`ID`)
+)ENGINE=InnoDB DEFAULT CHARSET=UTF8;
+
+-- ---------------------------------
+-- create table for storing all crawled image details
+-- ---------------------------------
+DROP TABLE IF EXISTS `IMAGE_DETAILS`;
+CREATE TABLE `IMAGE_DETAILS` (
+	`ID` INT(4) NOT NULL AUTO_INCREMENT,
+	`NAME` VARCHAR(24) NOT NULL COMMENT 'image name without suffix',
+	`FULL_NAME` VARCHAR(24) NOT NULL COMMENT 'image name with suffix',
+	`STORE_PATH` VARCHAR(48) NOT NULL COMMENT 'relative path to the storage',
+	`IMG_ID` INT(4) NOT NULL COMMENT 'parent image ID',
+	`CREATED_TIME` TIMESTAMP,
+	PRIMARY KEY (`ID`),
+	FOREIGN KEY (`IMG_ID`) REFERENCES `IMAGES` (`ID`)
 )ENGINE=InnoDB DEFAULT CHARSET=UTF8;
 
 -- ---------------------------------
@@ -74,8 +94,11 @@ CREATE TABLE `IMAGES` (
 -- ---------------------------------
 CREATE INDEX IDX_PIC_DOMAIN_ABBRVT ON `PIC_DOMAINS` (`ABBREVIATION`);
 CREATE INDEX IDX_CATEGORY ON `CATEGORIES` (`CATEGORY`);
+CREATE INDEX IDX_IMG_NAME ON `IMAGES` (`NAME`);
+CREATE INDEX IDX_IMG_DETAIL_NAME ON `IMAGE_DETAILS` (`NAME`);
 
 -- ---------------------------------
 -- initialize required data 
 -- ---------------------------------
 INSERT INTO `CATEGORIES`(`CATEGORY`, `ABBREVIATION`) VALUES('TOP', 'T'), ('BOTTOM', 'B'), ('OUTER', 'O'), ('DRESS', 'D'), ('BAG', 'E'), ('SHOES', 'S'), ('ACC', 'A');
+INSERT INTO `PIC_DOMAINS`(`DOMAIN`, `ABBREVIATION`, `RULE_4_NAVI_IMG`, `RULE_4_NAVI_2_NEXT_PAGE`, `PATTERN_EXTRACT_PAGINATION`, `RULE_4_LOCATE_DETAIL_IMG`) VALUES('http://www.roer.co.kr', 'ROER', '//img[@class=\'MS_prod_img_s\']', '//a[@class=\'now\']', 'r\'[pP][aA][gG][eE]=\\d+\'', '//img[contains(@src, \'ro\') and contains(@src, \'page\')]')
