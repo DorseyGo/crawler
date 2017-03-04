@@ -44,9 +44,9 @@
   <div class="row">
     <c:forEach var="item" items="${imagePage.list}">
       <div class="col-md-4 thumbnail">
+        <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
         <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
-        <h2>${item.name}</h2>
-        <p><a class="btn btn-default" href="${pageContext.request.contextPath}/images/detail/${item.id}" role="button">查看 &raquo;</a></p>
+        </a>
       </div>
     </c:forEach>
 

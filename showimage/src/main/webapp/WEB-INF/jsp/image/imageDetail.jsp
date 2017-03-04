@@ -36,10 +36,8 @@
 <div class="container text-center">
   <!-- Example row of columns -->
   <c:forEach var="item" items="${imageDetail}">
-    <div class="thumbnail">
+    <div class="col-lg-12 thumbnail">
       <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
-      <h2>${item.name}</h2>
-      <p><a class="btn btn-default" href="${pageContext.request.contextPath}/images/${item.id}" role="button">查看 &raquo;</a></p>
     </div>
   </c:forEach>
 
