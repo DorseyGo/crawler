@@ -1,14 +1,15 @@
 package imageshow.image.service;
 
-import java.util.List;
-
 import imageshow.Page;
 import imageshow.image.bean.Image;
+import imageshow.image.bean.ImageDetail;
 import imageshow.image.mapper.ImageMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 /**
  * @author Created by shuaqiu on 2017-02-10.
@@ -35,5 +36,9 @@ public class ImageService {
 
     public Image loadImage(final int id) {
         return imageMapper.loadImage(id);
+    }
+
+    public List<ImageDetail> loadImageDetail(final int imageId){
+        return imageMapper.loadImageDetail(imageId);
     }
 }

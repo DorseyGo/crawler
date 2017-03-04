@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  * @author Created by shuaqiu on 2017-02-10.
  */
-public class Image {
+public class ImageDetail {
 
     private Integer id;
 
@@ -15,9 +15,7 @@ public class Image {
 
     private String storePath;
 
-    private Integer categoryId;
-
-    private Integer domainId;
+    private Integer imageId;
 
     private Date createdTime;
 
@@ -53,13 +51,6 @@ public class Image {
         this.storePath = storePath;
     }
 
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(final Integer categoryId) {
-        this.categoryId = categoryId;
-    }
 
     public Date getCreatedTime() {
         return createdTime;
@@ -69,23 +60,22 @@ public class Image {
         this.createdTime = createdTime;
     }
 
-    public Integer getDomainId() {
-        return domainId;
+    public Integer getImageId() {
+        return imageId;
     }
 
-    public void setDomainId(Integer domainId) {
-        this.domainId = domainId;
+    public void setImageId(Integer imageId) {
+        this.imageId = imageId;
     }
 
     @Override
     public String toString() {
-        return "Image{" +
+        return "ImageDetail{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", storePath='" + storePath + '\'' +
-                ", categoryId=" + categoryId +
-                ", domainId=" + domainId +
+                ", imageId=" + imageId +
                 ", createdTime=" + createdTime +
                 '}';
     }
