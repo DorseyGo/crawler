@@ -1,5 +1,6 @@
 package imageshow.image.mapper;
 
+import imageshow.image.bean.Categories;
 import imageshow.image.bean.Image;
 import imageshow.image.bean.ImageDetail;
 import org.apache.ibatis.annotations.Param;
@@ -16,12 +17,16 @@ import java.util.List;
 public interface ImageMapper {
 
     @SelectProvider(type = ImageSqlBuilder.class, method = "buildCountSql")
-    long count(final @Param("name") String name);
+    long count(final @Param("name") String name,
+               final @Param("categoryId") long categoryId,
+               final @Param("domainId") int domainId);
 
     @SelectProvider(type = ImageSqlBuilder.class, method = "buildPaginateSql")
     List<Image> paginate(final @Param("offset") int offset,
                          final @Param("pageSize") int pageSize,
-                         final @Param("name") String name);
+                         final @Param("name") String name,
+                         final @Param("categoryId") long categoryId,
+                         final @Param("domainId") int domainId);
 
     @Select(" select" +
             "  ID as id," +
@@ -33,6 +38,14 @@ public interface ImageMapper {
             " from IMAGE_DETAILS" +
             " where IMG_ID = #{id}")
     List<ImageDetail> loadImageDetail(final int id);
+
+    @Select(" select" +
+            "  ID as id," +
+            "  CATEGORY as category," +
+            "  ABBREVIATION as abbreviation" +
+            " from CATEGORIES"+
+            " order by id")
+    List<Categories> loadCategories();
 
     @Select(" select" +
             "  ID as id," +
@@ -48,13 +61,16 @@ public interface ImageMapper {
 
     class ImageSqlBuilder {
 
-        public String buildCountSql(final @Param("name") String name) {
+        public String buildCountSql(final @Param("name") String name,
+                                    final @Param("categoryId") long categoryId,
+                                    final @Param("domainId") int domainId) {
             return new SQL() {
                 {
                     SELECT("count(*)");
                     FROM("IMAGES");
+                    WHERE(" CATEGORY_ID = #{categoryId} and DOMAIN_ID = #{domainId} ");
                     if (StringUtils.hasText(name)) {
-                        WHERE("NAME like #{name} or FULL_NAME like #{name}");
+                        WHERE(" and (NAME like #{name} or FULL_NAME like #{name})");
                     }
                 }
             }.toString();
@@ -62,7 +78,9 @@ public interface ImageMapper {
 
         public String buildPaginateSql(final @Param("offset") int offset,
                                        final @Param("pageSize") int pageSize,
-                                       final @Param("name") String name) {
+                                       final @Param("name") String name,
+                                       final @Param("categoryId") long categoryId,
+                                       final @Param("domainId") int domainId) {
             return new SQL() {
                 {
                     SELECT("ID as id",
@@ -73,8 +91,9 @@ public interface ImageMapper {
                             "DOMAIN_ID as domainId",
                             "CREATED_TIME as createdTime");
                     FROM("IMAGES");
+                    WHERE(" CATEGORY_ID = #{categoryId} and DOMAIN_ID = #{domainId} ");
                     if (StringUtils.hasText(name)) {
-                        WHERE("NAME like #{name} or FULL_NAME like #{name}");
+                        WHERE(" and (NAME like #{name} or FULL_NAME like #{name})");
                     }
                 }
             }.toString()

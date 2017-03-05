@@ -1,6 +1,7 @@
 package imageshow.image.service;
 
 import imageshow.Page;
+import imageshow.image.bean.Categories;
 import imageshow.image.bean.Image;
 import imageshow.image.bean.ImageDetail;
 import imageshow.image.mapper.ImageMapper;
@@ -25,13 +26,13 @@ public class ImageService {
         this.imageMapper = imageMapper;
     }
 
-    public Page<Image> loadImages(final int pageSize, final int pageNo, final String name) {
+    public Page<Image> loadImages(final int pageSize, final int pageNo, final String name, final long categoryId,final int domainId) {
         final String nameLike = StringUtils.hasText(name) ? "%" + name + "%" : null;
-        final long total = imageMapper.count(nameLike);
+        final long total = imageMapper.count(nameLike,categoryId,domainId);
         final int offset = pageSize * Math.max(0, pageNo - 1);
-        final List<Image> pageData = imageMapper.paginate(offset, pageSize, nameLike);
+        final List<Image> pageData = imageMapper.paginate(offset, pageSize, nameLike,categoryId,domainId);
 
-        return new Page<>(pageSize, pageNo, total, pageData);
+        return new Page<>(pageSize, pageNo, total, pageData,categoryId,domainId);
     }
 
     public Image loadImage(final int id) {
@@ -40,5 +41,9 @@ public class ImageService {
 
     public List<ImageDetail> loadImageDetail(final int imageId){
         return imageMapper.loadImageDetail(imageId);
+    }
+
+    public List<Categories> loadCategories(){
+        return imageMapper.loadCategories();
     }
 }

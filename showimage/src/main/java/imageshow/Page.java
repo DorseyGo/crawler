@@ -17,12 +17,18 @@ public class Page<T> {
 
     private final List<T> list;
 
-    public Page(final int pageSize, final int pageNo, final long total, final List<T> pageData) {
+    private final long categoryId;
+
+    private final int domainId;
+
+    public Page(final int pageSize, final int pageNo, final long total, final List<T> pageData,final long categoryId,final int domainId) {
         this.pageSize = pageSize;
         this.pageNo = pageNo;
         this.total = total;
         this.totalPage = (int) ((total - 1) / pageSize + 1);
         this.list = pageData;
+        this.categoryId = categoryId;
+        this.domainId = domainId;
     }
 
     public int getPageSize() {
@@ -43,5 +49,13 @@ public class Page<T> {
 
     public List<T> getList() {
         return list;
+    }
+
+    public long getCategoryId() {
+        return categoryId;
+    }
+
+    public int getDomainId() {
+        return domainId;
     }
 }

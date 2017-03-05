@@ -36,7 +36,7 @@
 <div class="container text-center">
   <!-- Example row of columns -->
   <c:forEach var="item" items="${imageDetail}">
-    <div class="col-lg-12 thumbnail">
+    <div class="thumbnail">
       <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
     </div>
   </c:forEach>

@@ -27,21 +27,59 @@
 <div class="jumbotron">
   <div class="container">
     <ul id="mytabs" class="nav nav-tabs">
-      <li role="presentation" class="active"><a href="#home">Home</a></li>
-      <li role="presentation"><a href="#profile">Profile</a></li>
-      <li role="presentation"><a href="#message">Messages</a></li>
+      <c:forEach var="item" items="${categories}" varStatus="status">
+        <c:choose>
+          <c:when test="${status.index == 0}">
+            <li role="presentation" ><a href="#${item.id}">${item.category}</a></li>
+          </c:when>
+          <c:otherwise>
+            <li role="presentation"><a href="#${item.id}">${item.category}</a></li>
+          </c:otherwise>
+        </c:choose>
+      </c:forEach>
     </ul>
     <div class="tab-content">
-      <div id="home" class="tab-pane fade active in"><p>home</p></div>
-      <div id="profile" class="tab-pane fade"><p>profile</p></div>
-      <div id="message" class="tab-pane fade"><p>message</p></div>
+      <c:forEach var="item1" items="${imagePage}" varStatus="status">
+        <c:choose>
+          <c:when test="${status.index == 0}">
+            <div class="tab-pane" id="${item1.categoryId}">
+              <!-- Example row of columns -->
+              <div class="row">
+                <c:forEach var="item" items="${item1.list}">
+                  <div class="col-md-4 thumbnail">
+                    <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
+                      <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
+                    </a>
+                  </div>
+                </c:forEach>
+              </div>
+              <div style="text-align: center"> <ul id="tt${item1.categoryId}" class="pagination"></ul></div>
+            </div>
+          </c:when>
+          <c:otherwise>
+            <div class="tab-pane" id="${item1.categoryId}">
+              <!-- Example row of columns -->
+              <div class="row">
+                <c:forEach var="item" items="${item1.list}">
+                  <div class="col-md-4 thumbnail">
+                    <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
+                      <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
+                    </a>
+                  </div>
+                </c:forEach>
+              </div>
+              <div style="text-align: center"> <ul id="tt${item1.categoryId}" class="pagination"></ul></div>
+            </div>
+          </c:otherwise>
+        </c:choose>
+      </c:forEach>
     </div>
   </div>
 </div>
 
 <div class="container">
   <!-- Example row of columns -->
-  <div class="row">
+  <%--<div class="row">
     <c:forEach var="item" items="${imagePage.list}">
       <div class="col-md-4 thumbnail">
         <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
@@ -51,7 +89,7 @@
     </c:forEach>
 
   </div>
-  <div style="text-align: center"> <ul id="tt" class="pagination"></ul></div>
+  <div style="text-align: center"> <ul id="tt" class="pagination"></ul></div>--%>
   <hr>
 
   <footer>
@@ -62,22 +100,33 @@
 
 </body>
 <script>
-  var options = {
-    currentPage: ${imagePage.pageNo},
-    totalPages: ${imagePage.totalPage},
-    numberOfPages: 10,
-    size:"normal",
-    bootstrapMajorVersion: 3,
-    alignment:"right",
-    pageUrl: function(type,page,current){
-      return "${pageContext.request.contextPath}/images/page?pageSize=${imagePage.pageSize}&pageNo="+page}
-  }
+  $.each(${imagePageJson},function(index,item){
+    var next = index+1;
 
-  $('#tt').bootstrapPaginator(options);
+    var options = {
+      currentPage: item.pageNo,
+      totalPages: item.totalPage,
+      numberOfPages: 10,
+      size:"normal",
+      bootstrapMajorVersion: 3,
+      alignment:"right",
+      pageUrl: function(type,page,current){
+        return "${pageContext.request.contextPath}/images/page?pageSize="+item.pageSize+"&pageNo="+page+"&categoryId="+item.categoryId+"&domainId="+item.domainId}
+    }
 
-  $("#mytabs a").click(function(e){
+    if(item.list.length > 0)
+      $('#tt'+next).bootstrapPaginator(options);
+  })
+
+  $('#mytabs a').click(function(e){
     e.preventDefault()
     $(this).tab('show')
   })
+
+  if (${categoryId} !== null || ${categoryId} !== '')
+  {
+    $('#mytabs a[href="#'+ ${categoryId}+'"]').tab('show')
+  }
+
 </script>
 </html>
