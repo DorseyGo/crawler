@@ -12,7 +12,7 @@ class PicCategory2UrlPersistentService():
     __FIND_ALL_SRC_URLS__ = "SELECT URL_ADDR FROM PIC_CATEGORIES_2_URL"
 
     #: SQL statements to grab all available url address to crawl the desired images.
-    __FIND_CATEGORY_AND_RULE_BY_URL_ADDR__ = "SELECT c.ABBREVIATION, pd.ID DOMAIN_ID, pd.RULE_4_NAVI_IMG, pd.RULE_4_LOCATE_DETAIL_IMG, pd.RULE_4_NAVI_2_NEXT_PAGE,\
+    __FIND_CATEGORY_AND_RULE_BY_URL_ADDR__ = "SELECT c.ABBREVIATION, pd.ID DOMAIN_ID, pd.RULE_4_NAVI_IMG, pc2u.RULE_4_LOCATE_DETAIL_IMG, pd.RULE_4_NAVI_2_NEXT_PAGE,\
                                             pd.PATTERN_EXTRACT_PAGINATION FROM PIC_CATEGORIES_2_URL pc2u \
                                           LEFT JOIN CATEGORIES c ON pc2u.CATEGORY_ID = c.ID \
                                         LEFT JOIN PIC_DOMAINS pd ON pc2u.DOMAIN_ID = pd.ID \
