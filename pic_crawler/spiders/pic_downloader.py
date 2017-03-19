@@ -54,15 +54,24 @@ class PicDownloader():
     def is_img_exist(self, img_name = None, domain_id = None, category_id = None):
         return self.image_persistent_service.is_img_exists(img_name, domain_id, category_id)
 
-    #: create the directory if absent, and return the path.
-    def create_dir_if_absent(self, domain_id = None, category = None):
+    def determine_relative_path(self, domain_id = None, category = None):
         domain = self.domain_persistent_service.find_domain_by_id(domain_id)
         if domain is None:
             raise RuntimeError("No domain found according to ID [%]", domain_id)
 
         domain_abbr = domain['ABBREVIATION']
         category_sub_folder = self.determine_category(category)
-        the_path_to_store_img = self.path_to_save_img + "/" + domain_abbr + "/" + category_sub_folder
+
+        if domain_abbr is None:
+            raise RuntimeError("No domain abbreviation specified")
+        if category_sub_folder is None:
+            raise RuntimeError("No category specified")
+
+        return domain_abbr + "/" + category_sub_folder
+
+    #: create the directory if absent, and return the path.
+    def create_dir_if_absent(self, relative_path = None):
+        the_path_to_store_img = self.path_to_save_img + "/" + relative_path
         if os.path.exists(the_path_to_store_img) is False:
             os.makedirs(the_path_to_store_img)
 
@@ -111,7 +120,8 @@ class PicDownloader():
                 logger.debug("DEBUG - Found that file [%s] already exists to url address [%s]", file_name_without_suffix, img_url)
                 return None
 
-        path_to_store_img = self.create_dir_if_absent(domain_id, category)
+        relative_store_path = self.determine_relative_path(domain_id, category)
+        path_to_store_img = self.create_dir_if_absent(relative_path=relative_store_path)
         dest_file = path_to_store_img + "/" + full_file_name
         urlopener = urllib.URLopener()
         # download the image stream
@@ -124,8 +134,8 @@ class PicDownloader():
 
         #: after save it to local file system, persistent the data to underlying database
         if parent_img_id is None:
-            last_img_id = self.image_persistent_service.insert_and_get_id(file_name_without_suffix, full_file_name, path_to_store_img, category_id, domain_id)
+            last_img_id = self.image_persistent_service.insert_and_get_id(file_name_without_suffix, full_file_name, relative_store_path, category_id, domain_id)
             logger.debug("----------------------->>Returned last image id = %s", last_img_id)
             return last_img_id
 
-        return self.image_detail_persistent_service.insert_and_get_id(file_name_without_suffix, full_file_name, path_to_store_img, parent_img_id)
+        return self.image_detail_persistent_service.insert_and_get_id(file_name_without_suffix, full_file_name, relative_store_path, parent_img_id)
