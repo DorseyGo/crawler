@@ -19,9 +19,9 @@ public class Page<T> {
 
     private final long categoryId;
 
-    private final int domainId;
+    private final String domainId;
 
-    public Page(final int pageSize, final int pageNo, final long total, final List<T> pageData,final long categoryId,final int domainId) {
+    public Page(final int pageSize, final int pageNo, final long total, final List<T> pageData,final long categoryId,final String domainId) {
         this.pageSize = pageSize;
         this.pageNo = pageNo;
         this.total = total;
@@ -55,7 +55,7 @@ public class Page<T> {
         return categoryId;
     }
 
-    public int getDomainId() {
+    public String getDomainId() {
         return domainId;
     }
 }

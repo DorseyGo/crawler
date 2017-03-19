@@ -13,6 +13,7 @@ public class HomeController {
 
     @GetMapping
     public String home() {
-        return "redirect:images";
+
+        return "redirect:images/-1";
     }
 }

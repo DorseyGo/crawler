@@ -22,76 +22,54 @@
   </div>
 </nav>
 
-
 <!-- Main jumbotron for a primary marketing message or call to action -->
 <div class="jumbotron">
   <div class="container">
+    <div id="domain" >
+      <li class="btn col-sm-2">
+        <a id="domain--1" href="#" style="text-decoration: none">all</a>
+      </li>
+      <c:forEach var="item" items="${picDomains}" varStatus="status">
+        <li class="btn col-sm-2">
+          <a id="domain-${item.id}" href="#" style="text-decoration: none">${item.domain}</a>
+        </li>
+      </c:forEach>
+    </div>
+    <div>
+      <li class="btn col-sm-2">
+        <input type="text" id="imageName"/>
+        <a id="queryBtn" class="btn btn-info">确&nbsp;&nbsp;定</a>
+      </li>
+    </div>
+  </div>
+  <div class="container">
     <ul id="mytabs" class="nav nav-tabs">
       <c:forEach var="item" items="${categories}" varStatus="status">
-        <c:choose>
-          <c:when test="${status.index == 0}">
-            <li role="presentation" ><a href="#${item.id}">${item.category}</a></li>
-          </c:when>
-          <c:otherwise>
-            <li role="presentation"><a href="#${item.id}">${item.category}</a></li>
-          </c:otherwise>
-        </c:choose>
+        <li role="presentation" ><a href="#${item.id}">${item.category}</a></li>
       </c:forEach>
     </ul>
     <div class="tab-content">
       <c:forEach var="item1" items="${imagePage}" varStatus="status">
-        <c:choose>
-          <c:when test="${status.index == 0}">
-            <div class="tab-pane" id="${item1.categoryId}">
-              <!-- Example row of columns -->
-              <div class="row">
-                <c:forEach var="item" items="${item1.list}">
-                  <div class="col-md-4 thumbnail">
-                    <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
-                      <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
-                    </a>
-                  </div>
-                </c:forEach>
+        <div class="tab-pane" id="${item1.categoryId}">
+          <!-- Example row of columns -->
+          <div class="row">
+            <c:forEach var="item" items="${item1.list}">
+              <div class="col-md-4 thumbnail">
+                <a href="${pageContext.request.contextPath}/images/detail/${item.id}?categoryId=${item1.categoryId}&domainId=${item.domainId}&createdTime=${item.createdTime}" >
+                  <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
+                </a>
+                <p><h6>图片名称:&nbsp;${item.name}</h6></p>
               </div>
-              <div style="text-align: center"> <ul id="tt${item1.categoryId}" class="pagination"></ul></div>
-            </div>
-          </c:when>
-          <c:otherwise>
-            <div class="tab-pane" id="${item1.categoryId}">
-              <!-- Example row of columns -->
-              <div class="row">
-                <c:forEach var="item" items="${item1.list}">
-                  <div class="col-md-4 thumbnail">
-                    <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
-                      <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
-                    </a>
-                  </div>
-                </c:forEach>
-              </div>
-              <div style="text-align: center"> <ul id="tt${item1.categoryId}" class="pagination"></ul></div>
-            </div>
-          </c:otherwise>
-        </c:choose>
+            </c:forEach>
+          </div>
+          <div style="text-align: center"> <ul id="tt${item1.categoryId}" class="pagination"></ul></div>
+        </div>
       </c:forEach>
     </div>
   </div>
 </div>
 
 <div class="container">
-  <!-- Example row of columns -->
-  <%--<div class="row">
-    <c:forEach var="item" items="${imagePage.list}">
-      <div class="col-md-4 thumbnail">
-        <a href="${pageContext.request.contextPath}/images/detail/${item.id}">
-        <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
-        </a>
-      </div>
-    </c:forEach>
-
-  </div>
-  <div style="text-align: center"> <ul id="tt" class="pagination"></ul></div>--%>
-  <hr>
-
   <footer>
     <p>&copy; 2017 Company, Inc.</p>
   </footer>
@@ -123,10 +101,40 @@
     $(this).tab('show')
   })
 
-  if (${categoryId} !== null || ${categoryId} !== '')
+  if ("${categoryId}" !== null || "${categoryId}" !== '')
   {
     $('#mytabs a[href="#'+ ${categoryId}+'"]').tab('show')
   }
 
+  if ("${domainIds}" !== null || "${domainIds}" !== ''){
+    var idArr = "${domainIds}".split(",");
+    for(var i=0;i<idArr.length;i++){
+      $('#domain-'+idArr[i]).toggleClass("btn-primary active");
+    }
+  }
+
+  $('.tab-content .thumbnail a').click(function(){
+
+    var pageNo = $('.tab-content .active .active a').text();
+    $(this).attr("href",$(this).attr("href")+"&pageNo="+pageNo);
+  })
+
+  $('#domain a').click(function(){
+    $(this).toggleClass("btn-primary active");
+  })
+
+  $('#queryBtn').click(function(){
+    var arr = new Array();
+    $('#domain a').each(function(){
+      if($(this).hasClass("btn-primary active")){
+        arr.push($(this).attr("id"));
+      }
+    })
+
+    var ids = arr.join(",");
+
+    var imageName = $('#imageName').val();
+    $(this).attr('href','${pageContext.request.contextPath}/images/multiIds?domainIds='+ids+'&imageName='+imageName);
+  })
 </script>
 </html>

@@ -4,6 +4,7 @@ import imageshow.Page;
 import imageshow.image.bean.Categories;
 import imageshow.image.bean.Image;
 import imageshow.image.bean.ImageDetail;
+import imageshow.image.bean.PicDomain;
 import imageshow.image.mapper.ImageMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class ImageService {
         this.imageMapper = imageMapper;
     }
 
-    public Page<Image> loadImages(final int pageSize, final int pageNo, final String name, final long categoryId,final int domainId) {
+    public Page<Image> loadImages(final int pageSize, final int pageNo, final String name, final long categoryId,final String domainId) {
         final String nameLike = StringUtils.hasText(name) ? "%" + name + "%" : null;
         final long total = imageMapper.count(nameLike,categoryId,domainId);
         final int offset = pageSize * Math.max(0, pageNo - 1);
@@ -45,5 +46,9 @@ public class ImageService {
 
     public List<Categories> loadCategories(){
         return imageMapper.loadCategories();
+    }
+
+    public List<PicDomain> loadPicDomains(){
+        return imageMapper.loadPicDomain();
     }
 }

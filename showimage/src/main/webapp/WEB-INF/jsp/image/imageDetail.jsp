@@ -29,7 +29,8 @@
 <!-- Main jumbotron for a primary marketing message or call to action -->
 <div class="jumbotron">
   <div class="container">
-    <h1>图片展示</h1>
+    <h4>图片抓取时间：${createdTime}</h4>
+    <h5><a href="${pageContext.request.contextPath}/images/page?pageSize=${pageSize}&pageNo=${pageNo}&categoryId=${categoryId}&domainId=${domainId}">返回</a></h5>
   </div>
 </div>
 

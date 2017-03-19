@@ -19,7 +19,7 @@ public class Image {
 
     private Integer domainId;
 
-    private Date createdTime;
+    private String createdTime;
 
     public int getId() {
         return id;
@@ -61,11 +61,11 @@ public class Image {
         this.categoryId = categoryId;
     }
 
-    public Date getCreatedTime() {
+    public String getCreatedTime() {
         return createdTime;
     }
 
-    public void setCreatedTime(final Date createdTime) {
+    public void setCreatedTime(final String createdTime) {
         this.createdTime = createdTime;
     }
 
