@@ -55,7 +55,7 @@
           <div class="row">
             <c:forEach var="item" items="${item1.list}">
               <div class="col-md-4 thumbnail">
-                <a href="${pageContext.request.contextPath}/images/detail/${item.id}?categoryId=${item1.categoryId}&domainId=${item.domainId}&createdTime=${item.createdTime}" >
+                <a href="${pageContext.request.contextPath}/images/detail/${item.id}?categoryId=${item1.categoryId}&domainId=${item.domainId}&createdTime=${item.createdTime}&domainIds=${item1.domainId}" >
                   <img src="http://localhost:8081/${item.storePath}/${item.fullName}"/>
                 </a>
                 <p><h6>图片名称:&nbsp;${item.name}</h6></p>

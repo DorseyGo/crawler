@@ -95,33 +95,36 @@ public class ImageController {
     }
 
     @GetMapping(value="/page")
-    public String page(@RequestParam("pageSize") int pageSize, @RequestParam("pageNo") int pageNo,@RequestParam("categoryId") long categoryId,@RequestParam("domainId") String domainId,final Model model) {
+    public String page(@RequestParam("pageSize") int pageSize, @RequestParam("pageNo") int pageNo,@RequestParam("categoryId") long categoryId,@RequestParam("domainId") String domainId,@RequestParam("domainIds") String domainIds,final Model model) {
 
         List<Page<Image>> list = new LinkedList<>();
 
         List<Categories> categories = imageService.loadCategories();
+        List<PicDomain> picDomains = imageService.loadPicDomains();
         Page<Image> images;
         for(Categories cat:categories) {
             if(cat.getId() == categoryId){
-                images = imageService.loadImages(pageSize, pageNo, null, cat.getId(), domainId);
+                images = imageService.loadImages(pageSize, pageNo, null, cat.getId(), domainIds);
             }else {
-                images = imageService.loadImages(Constants.PAGE_SIZE, Constants.FIRST_PAGE, null, cat.getId(), domainId);
+                images = imageService.loadImages(Constants.PAGE_SIZE, Constants.FIRST_PAGE, null, cat.getId(), domainIds);
             }
             list.add(images);
         }
 
         model.addAttribute("imagePage", list);
         model.addAttribute("categories", categories);
+        model.addAttribute("picDomains",picDomains);
         String json = JSON.toJSONString(categories);
         model.addAttribute("categoriesJson", json);
         model.addAttribute("imagePageJson", JSON.toJSONString(list));
         model.addAttribute("categoryId", categoryId);
+        model.addAttribute("domainIds",domainIds);
 
         return "image/imageList";
     }
 
     @GetMapping(value = "/detail/{imageId}")
-    public String detailList(@PathVariable final int imageId, final Model model, @RequestParam("pageNo") int pageNo,@RequestParam("categoryId") long categoryId,@RequestParam("domainId") int domainId, @RequestParam("createdTime") String createdTime) {
+    public String detailList(@PathVariable final int imageId, final Model model, @RequestParam("pageNo") int pageNo,@RequestParam("categoryId") long categoryId,@RequestParam("domainId") int domainId, @RequestParam("createdTime") String createdTime,@RequestParam("domainIds") String domainIds) {
 
         System.out.println(pageNo+","+categoryId+","+domainId);
         final List<ImageDetail> imageDetail = imageService.loadImageDetail(imageId);
@@ -131,6 +134,7 @@ public class ImageController {
         model.addAttribute("categoryId",categoryId);
         model.addAttribute("domainId",domainId);
         model.addAttribute("createdTime",createdTime);
+        model.addAttribute("domainIds",domainIds);
 
         return "image/imageDetail";
     }

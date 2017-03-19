@@ -30,7 +30,7 @@
 <div class="jumbotron">
   <div class="container">
     <h4>图片抓取时间：${createdTime}</h4>
-    <h5><a href="${pageContext.request.contextPath}/images/page?pageSize=${pageSize}&pageNo=${pageNo}&categoryId=${categoryId}&domainId=${domainId}">返回</a></h5>
+    <h5><a href="${pageContext.request.contextPath}/images/page?pageSize=${pageSize}&pageNo=${pageNo}&categoryId=${categoryId}&domainId=${domainId}&domainIds=${domainIds}">返回</a></h5>
   </div>
 </div>
 
